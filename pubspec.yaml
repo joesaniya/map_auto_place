@@ -39,6 +39,8 @@ dependencies:
   google_places_flutter: ^2.1.0
   dio: ^5.1.0
   dropdown_search: ^6.0.2
+  geolocator: ^13.0.4
+  geocoding: ^3.0.0
 
 dev_dependencies:
   flutter_test:

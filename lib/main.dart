@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:map_example/auto_search.dart';
 import 'package:map_example/auto_suggestion.dart';
 import 'package:map_example/mapscreen.dart';
+import 'package:map_example/user_location.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,7 +37,8 @@ class MyApp extends StatelessWidget {
       ),
       // home: MapScreen(),
 
-      home: AutoSearchPage(),
+      // home: AutoSearchPage(),
+      home: LocationScreen(),
       // home: PlaceSuggestionPage(),
     );
   }
