@@ -38,6 +38,36 @@ class _AutoSearchPageState extends State<AutoSearchPage> {
     }
   }
 
+  double? lat, lng;
+  Future<void> fetchPlaceDetails(String placeId) async {
+    final String url =
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
+
+    try {
+      final response = await Dio().get(url);
+      if (response.statusCode == 200) {
+        final location = response.data['result']['geometry']['location'];
+
+        lat = location['lat'];
+        lng = location['lng'];
+        log('value: $lat,$lng');
+
+        _selectedLocation = LatLng(lat!, lng!);
+
+        log('selected location init: $_selectedLocation');
+        _mapController
+            ?.animateCamera(CameraUpdate.newLatLng(_selectedLocation!));
+
+        log('selected location init2: $_selectedLocation');
+      } else {
+        log('Error: ${response.statusMessage}');
+      }
+    } catch (e) {
+      log("Error fetching place details: $e");
+    }
+  }
+
+  /*double? lat, lng;
   Future<void> fetchPlaceDetails(String placeId) async {
     final String url =
         'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$_apiKey';
@@ -48,13 +78,18 @@ class _AutoSearchPageState extends State<AutoSearchPage> {
         final location = response.data['result']['geometry']['location'];
         final lat = location['lat'];
         final lng = location['lng'];
-        log('Latitude: $lat, Longitude: $lng');
-        setState(() {
-          _selectedLocation = LatLng(lat, lng);
-        });
-
-        _mapController
-            ?.animateCamera(CameraUpdate.newLatLng(_selectedLocation!));
+        /*  lat = location['lat'];
+        lng = location['lng'];*/
+        log('value: $lat,$lng');
+        if (mounted) {
+          setState(() {
+            _selectedLocation = LatLng(lat!, lng!);
+          });
+          log('selected location init: $_selectedLocation');
+          _mapController
+              ?.animateCamera(CameraUpdate.newLatLng(_selectedLocation!));
+        }
+        log('selected location init2: $_selectedLocation');
       } else {
         log('Error: ${response.statusMessage}');
       }
@@ -62,31 +97,13 @@ class _AutoSearchPageState extends State<AutoSearchPage> {
       log("Error fetching place details: $e");
     }
   }
-
+*/
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Place Suggestion")),
       body: Column(
         children: [
-/*DropdownSearch<String>(
-  popupProps: PopupProps.menu(showSearchBox: true),
-        mode: Mode.custom,
-           items: _places.map((place) => place['description'] as String).toList(),
-        onChanged: (value) {
-          // Handle the selected value
-          print("Selected place: $value");
-        },
-        dropdownBuilder: (context, selectedItem) {
-          return Text(selectedItem ?? "Select a place");
-        },
-        filterFn: (item, filter) => item.toLowerCase().contains(filter.toLowerCase()),
-        onFind: (String filter) async {
-          await fetchSuggestions(filter);
-          return _places.map((place) => place['description'] as String).toList();
-        },
-      ),*/
-
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -113,11 +130,25 @@ class _AutoSearchPageState extends State<AutoSearchPage> {
                 final place = _places[index];
                 return ListTile(
                   title: Text(place['description']),
-                  onTap: () {
-                    _controller.text = place['description']; // Update TextField
-                    fetchPlaceDetails(place['place_id']); // Fetch details
+                  onTap: () async {
+                    final selectedPlace = place;
+                    _controller.text = selectedPlace['description'];
+
+                    await fetchPlaceDetails(selectedPlace['place_id']);
+
+                    if (_selectedLocation != null) {
+                      Navigator.pop(context, {
+                        'description': selectedPlace['description'],
+                        'place_id': selectedPlace['place_id'],
+                        'latitude': _selectedLocation!.latitude,
+                        'longitude': _selectedLocation!.longitude,
+                      });
+                    } else {
+                      log('Error: _selectedLocation is null');
+                    }
+
                     setState(() {
-                      _places.clear(); // Clear suggestions after selection
+                      _places.clear();
                     });
                     FocusScope.of(context).unfocus();
                   },
